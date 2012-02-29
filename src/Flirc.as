@@ -44,13 +44,19 @@ package
 			logContents.addChild(new PushButton(null, 0, 0, "Send", onSendClick));
 			addChild(logContents);
 			
+			logText.width = 400;
+			logText.height = 300;
+			
 			connection = new IRCConnection();
+			connection.username = "wqkmvs";
+			connection.realName = "Sam Funzio";
+			connection.nickname = "wqkmv sam";
 			connection.addEventListener(TextEvent.TEXT_INPUT, onLineReceived);
 		}
 		
 		private function onLineReceived(e:TextEvent):void
 		{
-			logText.text += e.text;
+			logText.text += e.text + "\n";
 		}
 		
 		private function onConnectClick(e:Event):void

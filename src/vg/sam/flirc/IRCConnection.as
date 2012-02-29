@@ -20,6 +20,7 @@ package vg.sam.flirc
 		public var host:String;
 		public var port:int = 6667;
 		public var useSSL:Boolean;
+		public var nickname:String;
 		public var username:String;
 		public var password:String;
 		public var realName:String;
@@ -53,7 +54,7 @@ package vg.sam.flirc
 		{
 			if (socket)
 			{
-				socket.close();
+				if (socket.connected) socket.close();
 				
 				socket.removeEventListener(Event.CONNECT, onSocketConnect);
 				socket.removeEventListener(Event.CLOSE, onSocketClose);
@@ -77,6 +78,11 @@ package vg.sam.flirc
 			socket.flush();
 		}
 		
+		public function send(message:IRCMessage):void
+		{
+			sendLine(message.raw);
+		}
+		
 		private function onSocketConnect(event:Event):void
 		{
 			trace("onSocketConnect :" + event);
@@ -85,13 +91,15 @@ package vg.sam.flirc
 			
 			if (password) sendLine("PASS " + password);
 			
-			sendLine("NICK wqkmvs");
-			sendLine("USER wqkmvs 8 * :Sam Morrison");
+			sendLine("NICK " + nickname);
+			sendLine("USER " + username + " 8 * :" + realName);
 		}
 
 		private function onSocketClose(event:Event):void
 		{
 			trace("onSocketClose :" + event);
+			
+			disconnect();
 		}
 		
 		private function onSocketData(event:ProgressEvent):void
@@ -112,10 +120,17 @@ package vg.sam.flirc
 		private function parseSocketData():void
 		{
 			var line:String;
+			var message:IRCMessage;
 			while (line = readLine())
 			{
 				parseLine(line);
-				dispatchEvent(new TextEvent(TextEvent.TEXT_INPUT, false, false, line));
+				message = IRCMessage.fromRaw(line);
+				
+				if (message.command == "PING")
+				{
+					send(IRCMessage.fromCommand("PONG", message.params));
+				}
+				
 			}
 		}
 		
@@ -138,6 +153,7 @@ package vg.sam.flirc
 		private function parseLine(line:String):void
 		{
 			trace('Parsing line: "' + line + '"');
+			dispatchEvent(new TextEvent(TextEvent.TEXT_INPUT, false, false, line));
 		}
 	}
 }
