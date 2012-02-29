@@ -6,13 +6,12 @@ package
 	import com.bit101.components.PushButton;
 	import com.bit101.components.TextArea;
 	import com.bit101.components.VBox;
-	import com.bit101.components.Window;
 	
 	import flash.display.Sprite;
 	import flash.events.Event;
-	import flash.events.TextEvent;
 	
 	import vg.sam.flirc.IRCConnection;
+	import vg.sam.flirc.events.IRCConnectionEvent;
 	
 	[SWF(width="1024", height="350")]
 	public class Flirc extends Sprite
@@ -60,12 +59,12 @@ package
 			sendInput.width = 400;
 			
 			connection = new IRCConnection();
-			connection.addEventListener(TextEvent.TEXT_INPUT, onLineReceived);
+			connection.addEventListener(IRCConnectionEvent.MESSAGE_RECIEVED, onMessageReceived);
 		}
-		
-		private function onLineReceived(e:TextEvent):void
+
+		private function onMessageReceived(event:IRCConnectionEvent):void
 		{
-			logText.text += e.text + "\n";
+			logText.text += event.message.raw + "\n";
 		}
 		
 		private function onConnectClick(e:Event):void

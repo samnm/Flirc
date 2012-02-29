@@ -5,9 +5,9 @@ package vg.sam.flirc
 	import flash.events.IOErrorEvent;
 	import flash.events.ProgressEvent;
 	import flash.events.SecurityErrorEvent;
-	import flash.events.TextEvent;
 	import flash.net.Socket;
-	import flash.utils.ByteArray;
+	
+	import vg.sam.flirc.events.IRCConnectionEvent;
 	
 	public class IRCConnection extends EventDispatcher
 	{
@@ -32,8 +32,10 @@ package vg.sam.flirc
 		public function IRCConnection()
 		{
 			state = NOT_CONNECTED;
+			
+			addEventListener(IRCConnectionEvent.MESSAGE_RECIEVED, onMessageReceived);
 		}
-		
+
 		public function connect():void
 		{
 			disconnect();
@@ -73,14 +75,23 @@ package vg.sam.flirc
 		
 		public function sendLine(command:String):void
 		{
-			trace('Sending line: "' + command + '"');
-			socket.writeUTFBytes(command + "\r\n");
-			socket.flush();
+			send(IRCMessage.fromRaw(command));
 		}
 		
 		public function send(message:IRCMessage):void
 		{
-			sendLine(message.raw);
+			dispatchEvent(new IRCConnectionEvent(IRCConnectionEvent.MESSAGE_SENT, message));
+			
+			socket.writeUTFBytes(message.raw + "\r\n");
+			socket.flush();
+		}
+		
+		private function onMessageReceived(event:IRCConnectionEvent):void
+		{
+			if (event.message.command == "PING")
+			{
+				send(IRCMessage.fromCommand(IRCMessage.PONG, event.message.params));
+			}
 		}
 		
 		private function onSocketConnect(event:Event):void
@@ -89,10 +100,10 @@ package vg.sam.flirc
 			
 			state = CONNECTED;
 			
-			if (password) sendLine("PASS " + password);
+			if (password) send(IRCMessage.fromCommand(IRCMessage.PASS, [password]));
 			
-			sendLine("NICK " + nickname);
-			sendLine("USER " + username + " 8 * :" + realName);
+			send(IRCMessage.fromCommand(IRCMessage.NICK, [nickname]));
+			send(IRCMessage.fromCommand(IRCMessage.USER, [username, "8", "*", realName]));
 		}
 
 		private function onSocketClose(event:Event):void
@@ -104,33 +115,28 @@ package vg.sam.flirc
 		
 		private function onSocketData(event:ProgressEvent):void
 		{
-			parseSocketData();
+			processSocketData();
 		}
 		
 		private function onSocketIOError(event:IOErrorEvent):void
 		{
-			trace("onSocketIOError :" + event);
+			throw event;
 		}
 		
 		private function onSocketSecurityError(event:SecurityErrorEvent):void
 		{
-			trace("onSocketSecurityError :" + event);
+			throw event;
 		}
 		
-		private function parseSocketData():void
+		private function processSocketData():void
 		{
 			var line:String;
 			var message:IRCMessage;
+			
 			while (line = readLine())
 			{
-				parseLine(line);
 				message = IRCMessage.fromRaw(line);
-				
-				if (message.command == "PING")
-				{
-					send(IRCMessage.fromCommand("PONG", message.params));
-				}
-				
+				dispatchEvent(new IRCConnectionEvent(IRCConnectionEvent.MESSAGE_RECIEVED, message));
 			}
 		}
 		
@@ -148,12 +154,6 @@ package vg.sam.flirc
 			}
 			
 			return line;
-		}
-		
-		private function parseLine(line:String):void
-		{
-			trace('Parsing line: "' + line + '"');
-			dispatchEvent(new TextEvent(TextEvent.TEXT_INPUT, false, false, line));
 		}
 	}
 }
