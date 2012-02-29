@@ -14,12 +14,16 @@ package
 	
 	import vg.sam.flirc.IRCConnection;
 	
+	[SWF(width="1024", height="350")]
 	public class Flirc extends Sprite
 	{
 		private var connection:IRCConnection;
 		
 		private var hostInput:InputText;
 		private var portInput:InputText;
+		private var usernameInput:InputText;
+		private var realnameInput:InputText;
+		private var nicknameInput:InputText;
 		private var passwordInput:InputText;
 		private var sendInput:InputText;
 		private var logText:TextArea;
@@ -30,9 +34,15 @@ package
 			
 			var connectContents:VBox = new VBox(this);
 			connectContents.addChild(new Label(null, 0, 0, "Host"));
-			connectContents.addChild(hostInput = new InputText(null, 0, 0, ""));
+			connectContents.addChild(hostInput = new InputText(null, 0, 0, "irc.esper.net"));
 			connectContents.addChild(new Label(null, 0, 0, "Port"));
-			connectContents.addChild(portInput = new InputText(null, 0, 0, ""));
+			connectContents.addChild(portInput = new InputText(null, 0, 0, "6667"));
+			connectContents.addChild(new Label(null, 0, 0, "Username"));
+			connectContents.addChild(usernameInput = new InputText(null, 0, 0, "wqkmv"));
+			connectContents.addChild(new Label(null, 0, 0, "Nickname"));
+			connectContents.addChild(nicknameInput = new InputText(null, 0, 0, "Sam"));
+			connectContents.addChild(new Label(null, 0, 0, "Realname"));
+			connectContents.addChild(realnameInput = new InputText(null, 0, 0, "Sam Morrison"));
 			connectContents.addChild(new Label(null, 0, 0, "Password"));
 			connectContents.addChild(passwordInput = new InputText(null, 0, 0, ""));
 			connectContents.addChild(new PushButton(null, 0, 0, "Connect", onConnectClick));
@@ -44,13 +54,12 @@ package
 			logContents.addChild(new PushButton(null, 0, 0, "Send", onSendClick));
 			addChild(logContents);
 			
-			logText.width = 400;
+			logText.width = 924;
 			logText.height = 300;
 			
+			sendInput.width = 400;
+			
 			connection = new IRCConnection();
-			connection.username = "wqkmvs";
-			connection.realName = "Sam Funzio";
-			connection.nickname = "wqkmv sam";
 			connection.addEventListener(TextEvent.TEXT_INPUT, onLineReceived);
 		}
 		
@@ -64,6 +73,10 @@ package
 			connection.host = hostInput.text;
 			connection.port = int(portInput.text);
 			connection.password = passwordInput.text;
+			
+			connection.username = usernameInput.text;
+			connection.realName = realnameInput.text;
+			connection.nickname = nicknameInput.text;
 			
 			connection.connect();
 		}
