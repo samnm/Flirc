@@ -14,8 +14,7 @@ package vg.sam.flirc
 		private static const DISCONNECTED:int = -1;
 		private static const NOT_CONNECTED:int = 0;
 		private static const CONNECTED:int = 1;
-		private static const REGISTERED:int = 2;
-		private static const COMPLETE:int = 3;
+		private static const WELCOMED:int = 2;
 		
 		public var host:String;
 		public var port:int = 6667;
@@ -32,8 +31,6 @@ package vg.sam.flirc
 		public function IRCConnection()
 		{
 			state = NOT_CONNECTED;
-			
-			addEventListener(IRCConnectionEvent.MESSAGE_RECIEVED, onMessageReceived);
 		}
 
 		public function connect():void
@@ -66,6 +63,8 @@ package vg.sam.flirc
 			}
 			
 			socket = null;
+			
+			state = DISCONNECTED;
 		}
 		
 		public function get connected():Boolean
@@ -88,9 +87,18 @@ package vg.sam.flirc
 		
 		private function onMessageReceived(event:IRCConnectionEvent):void
 		{
-			if (event.message.command == "PING")
+			switch(event.message.command)
 			{
-				send(IRCMessage.fromCommand(IRCMessage.PONG, event.message.params));
+				case IRCMessage.PING:
+					send(IRCMessage.fromCommand(IRCMessage.PONG, event.message.params));
+					break;
+				
+				case IRCMessage.RPL_WELCOME:
+					dispatchEvent(new IRCConnectionEvent(IRCConnectionEvent.CONNECTED));
+					break;
+				
+				default:
+					break;
 			}
 		}
 		
@@ -132,11 +140,15 @@ package vg.sam.flirc
 		{
 			var line:String;
 			var message:IRCMessage;
+			var event:IRCConnectionEvent;
 			
 			while (line = readLine())
 			{
 				message = IRCMessage.fromRaw(line);
-				dispatchEvent(new IRCConnectionEvent(IRCConnectionEvent.MESSAGE_RECIEVED, message));
+				event = new IRCConnectionEvent(IRCConnectionEvent.MESSAGE_RECIEVED, message);
+				
+				dispatchEvent(event);
+				onMessageReceived(event);
 			}
 		}
 		

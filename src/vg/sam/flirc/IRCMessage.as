@@ -49,6 +49,12 @@ package vg.sam.flirc
 		public static const WHOIS:String = "WHOIS";
 		public static const WHOWAS:String = "WHOWAS";
 		
+		public static const RPL_WELCOME:String = "001";
+		public static const RPL_YOURHOST:String = "002";
+		public static const RPL_CREATED:String = "003";
+		public static const RPL_MYINFO:String = "004";
+		public static const RPL_BOUNCE:String = "005";
+		
 		protected var _raw:String;
 		protected var _prefix:String;
 		protected var _command:String;
@@ -107,6 +113,13 @@ package vg.sam.flirc
 			return _prefix;
 		}
 		
+		public function get nickname():String
+		{
+			var matches:Array = _prefix.match(/^[^!]+/);
+			// this regex is pretty relaxed because the prefix has already been matched for spaces 
+			return (matches.length > 0) ? matches[0] : "";
+		}
+		
 		public function set command(value:String):void
 		{
 			_command = value;
@@ -144,7 +157,16 @@ package vg.sam.flirc
 			
 			if (_params && _params.length > 0)
 			{
-				_raw += " " + _params.join(" ");
+				var rawParams:Array = _params.concat();
+				var lastParam:String = rawParams[rawParams.length - 1];
+				
+				if (lastParam.indexOf(" ") > 0 || lastParam.indexOf(":") == 0)
+				{
+					lastParam = ":" + lastParam;
+					rawParams[rawParams.length - 1] = lastParam;
+				}
+				
+				_raw += " " + rawParams.join(" ");
 			}
 		}
 		
@@ -163,7 +185,23 @@ package vg.sam.flirc
 			
 			_command = components.shift();
 			
-			_params = components;
+			_params = [];
+			
+			while (components.length > 0)
+			{
+				var param:String = components.shift();
+				if (param.indexOf(":") == 0)
+				{
+					param = param.substr(1);
+					if (components.length > 0) param += " " + components.join(" ");
+					_params.push(param);
+					break;
+				}
+				else
+				{
+					_params.push(param);
+				}
+			}
 		}
 	}
 }

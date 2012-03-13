@@ -9,6 +9,8 @@ package vg.sam.flirc.events
 		public static const MESSAGE_RECIEVED:String = "MESSAGE_RECIEVED";
 		public static const MESSAGE_SENT:String = "MESSAGE_SENT";
 		
+		public static const CONNECTED:String = "CONNECTED";
+		
 		public var message:IRCMessage;
 		
 		public function IRCConnectionEvent(type:String, message:IRCMessage = null)

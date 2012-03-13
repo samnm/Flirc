@@ -5,6 +5,7 @@
     <classEntry path="vg.sam.flirc.IRCConnection"/>
     <classEntry path="vg.sam.flirc.IRCMessage"/>
     <classEntry path="vg.sam.flirc.events.IRCConnectionEvent"/>
+    <classEntry path="vg.sam.flirc.IRCSender"/>
   </includeClasses>
   <includeResources/>
   <namespaceManifests/>
